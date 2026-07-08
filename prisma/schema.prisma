@@ -1,13 +1,40 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Prisma schema for the Notice Board.
+// Docs: https://pris.ly/d/prisma-schema
+// The datasource URL is provided via prisma.config.ts (process.env.DATABASE_URL).
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Ordering note: enum values are stored in declaration order, so `Normal`
+// sorts before `Urgent`. Ordering by `priority` DESC in the DB query therefore
+// puts every Urgent notice above every Normal one (see pages/api/notices).
+enum Priority {
+  Normal
+  Urgent
+}
+
+enum Category {
+  Exam
+  Event
+  General
+}
+
+model Notice {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(200)
+  body        String   @db.Text
+  category    Category @default(General)
+  priority    Priority @default(Normal)
+  publishDate DateTime
+  image       String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([priority, publishDate])
 }
